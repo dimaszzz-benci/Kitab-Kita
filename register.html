@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar — Bible Kita</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Animasi background */
+    .bg-animasi {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .partikel {
+      position: absolute;
+      opacity: 0.08;
+      animation: melayang linear infinite;
+    }
+
+    @keyframes melayang {
+      from { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.08; }
+      90%  { opacity: 0.08; }
+      to   { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Kartu masuk dari bawah */
+    @keyframes kartuMasuk {
+      from { opacity: 0; transform: translateY(40px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .kartu-auth {
+      animation: kartuMasuk 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Logo animasi */
+    @keyframes logoPulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.08); }
+    }
+
+    .logo-auth {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 6px;
+      animation: logoPulse 2.5s ease infinite;
+      display: block;
+    }
+
+    /* Input dengan label mengapung */
+    .input-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--teks);
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      margin-bottom: 0;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--aksen);
+      box-shadow: 0 0 0 3px rgba(123,63,0,0.12);
+      outline: none;
+    }
+
+    .input-wrap label {
+      position: absolute;
+      left: 14px;
+      top: 11px;
+      color: gray;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      pointer-events: none;
+      background: var(--bg);
+      padding: 0 4px;
+    }
+
+    .input-wrap input:focus ~ label,
+    .input-wrap input:not(:placeholder-shown) ~ label {
+      top: -9px;
+      font-size: 0.75rem;
+      color: var(--aksen);
+    }
+
+    /* Indikator kekuatan password */
+    .strength-bar {
+      height: 4px;
+      border-radius: 4px;
+      margin-top: 6px;
+      background: var(--border);
+      overflow: hidden;
+    }
+
+    .strength-fill {
+      height: 100%;
+      border-radius: 4px;
+      width: 0%;
+      transition: all 0.3s ease;
+    }
+
+    .strength-label {
+      font-size: 0.75rem;
+      margin-top: 3px;
+      color: gray;
+    }
+
+    /* Tombol daftar */
+    .btn-daftar {
+      width: 100%;
+      padding: 12px;
+      background: var(--aksen);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-daftar:hover {
+      background: var(--aksen2);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(123,63,0,0.3);
+    }
+
+    .btn-daftar:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Checklist syarat */
+    .syarat-item {
+      font-size: 0.8rem;
+      color: gray;
+      margin-bottom: 3px;
+      transition: color 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .syarat-item.valid {
+      color: #2e7d32;
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 16px 0;
+      color: gray;
+      font-size: 0.85rem;
+    }
+    .divider::before, .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background partikel -->
+  <div class="bg-animasi" id="bg-animasi"></div>
+
+  <div class="halaman-auth">
+    <div class="kartu-auth">
+
+      <!-- Logo -->
+      <span class="logo-auth">✝️</span>
+      <h2 style="text-align:center;color:var(--aksen);margin-bottom:4px">Bible Kita</h2>
+      <p style="text-align:center;color:gray;margin-bottom:24px;font-size:0.9rem">
+        Buat akun baru
+      </p>
+
+      <!-- Form Register -->
+      <div class="input-wrap">
+        <input type="text" id="inp-nama" placeholder=" ">
+        <label for="inp-nama">👤 Nama Lengkap</label>
+      </div>
+
+      <div class="input-wrap">
+        <input type="email" id="inp-email" placeholder=" ">
+        <label for="inp-email">📧 Email</label>
+      </div>
+
+      <div class="input-wrap">
+        <input type="password" id="inp-pass" placeholder=" "
+          oninput="cekKekuatanPassword(this.value)">
+        <label for="inp-pass">🔒 Password</label>
+      </div>
+
+      <!-- Indikator kekuatan password -->
+      <div class="strength-bar">
+        <div class="strength-fill" id="strength-fill"></div>
+      </div>
+      <p class="strength-label" id="strength-label">Masukkan password</p>
+
+      <!-- Checklist syarat password -->
+      <div style="margin: 10px 0 16px 0">
+        <div class="syarat-item" id="s-panjang">⭕ Minimal 6 karakter</div>
+        <div class="syarat-item" id="s-angka">⭕ Mengandung angka</div>
+        <div class="syarat-item" id="s-huruf">⭕ Mengandung huruf besar</div>
+      </div>
+
+      <!-- Tombol Daftar -->
+      <button class="btn-daftar" onclick="prosesRegister(event)">
+        Daftar Sekarang
+      </button>
+
+      <!-- Pesan error/sukses -->
+      <p id="pesan-auth" style="text-align:center;font-size:0.88rem;min-height:20px"></p>
+
+      <div class="divider">atau</div>
+
+      <!-- Link ke login -->
+      <p style="text-align:center;font-size:0.9rem">
+        Sudah punya akun?
+        <a href="login.html"
+          style="color:var(--aksen);font-weight:bold;text-decoration:none">
+          Masuk
+        </a>
+      </p>
+
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    // ===== CEK KEKUATAN PASSWORD =====
+    function cekKekuatanPassword(pass) {
+      const fill  = document.getElementById("strength-fill");
+      const label = document.getElementById("strength-label");
+
+      // Cek syarat
+      const panjang = pass.length >= 6;
+      const angka   = /\d/.test(pass);
+      const huruf   = /[A-Z]/.test(pass);
+
+      // Update checklist
+      const sPanjang = document.getElementById("s-panjang");
+      const sAngka   = document.getElementById("s-angka");
+      const sHuruf   = document.getElementById("s-huruf");
+
+      sPanjang.textContent = (panjang ? "✅" : "⭕") + " Minimal 6 karakter";
+      sAngka.textContent   = (angka   ? "✅" : "⭕") + " Mengandung angka";
+      sHuruf.textContent   = (huruf   ? "✅" : "⭕") + " Mengandung huruf besar";
+
+      sPanjang.className = "syarat-item" + (panjang ? " valid" : "");
+      sAngka.className   = "syarat-item" + (angka   ? " valid" : "");
+      sHuruf.className   = "syarat-item" + (huruf   ? " valid" : "");
+
+      // Hitung skor kekuatan
+      const skor = [panjang, angka, huruf].filter(Boolean).length;
+
+      // Update bar
+      const warna = ["#ef5350", "#ff9800", "#66bb6a"];
+      const teks  = ["Lemah", "Sedang", "Kuat"];
+
+      if (pass.length === 0) {
+        fill.style.width      = "0%";
+        label.textContent     = "Masukkan password";
+        label.style.color     = "gray";
+      } else {
+        fill.style.width      = (skor * 33.3) + "%";
+        fill.style.background = warna[skor - 1] || "#ef5350";
+        label.textContent     = teks[skor - 1]  || "Lemah";
+        label.style.color     = warna[skor - 1] || "#ef5350";
+      }
+    }
+
+    // ===== BUAT PARTIKEL MELAYANG =====
+    (function() {
+      const bg     = document.getElementById("bg-animasi");
+      const simbol = ["✝", "✞", "☩", "🕊️", "⭐", "🙏"];
+      const jumlah = 18;
+
+      for (let i = 0; i < jumlah; i++) {
+        const el = document.createElement("span");
+        el.className   = "partikel";
+        el.textContent = simbol[Math.floor(Math.random() * simbol.length)];
+
+        el.style.left     = Math.random() * 100 + "vw";
+        el.style.fontSize = (0.8 + Math.random() * 1.5) + "rem";
+
+        const durasi = 8 + Math.random() * 12;
+        const delay  = -Math.random() * durasi;
+        el.style.animationDuration = durasi + "s";
+        el.style.animationDelay   = delay + "s";
+
+        bg.appendChild(el);
+      }
+    })();
+
+    // Kalau sudah login langsung ke index
+    window.addEventListener("DOMContentLoaded", function() {
+      const user = getUserLogin();
+      if (user) window.location.href = "index.html";
+    });
+  </script>
+</body>
+  </html>
