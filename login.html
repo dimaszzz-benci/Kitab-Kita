@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Bible Kita</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Animasi khusus halaman login */
+
+    /* Background animasi salib */
+    .bg-animasi {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Partikel salib melayang */
+    .partikel {
+      position: absolute;
+      font-size: 1.2rem;
+      opacity: 0.08;
+      animation: melayang linear infinite;
+    }
+
+    @keyframes melayang {
+      from { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.08; }
+      90%  { opacity: 0.08; }
+      to   { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Kartu login animasi masuk */
+    @keyframes kartuMasuk {
+      from { opacity: 0; transform: translateY(40px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .kartu-auth {
+      animation: kartuMasuk 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Logo animasi */
+    @keyframes logoPulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.08); }
+    }
+
+    .logo-auth {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 6px;
+      animation: logoPulse 2.5s ease infinite;
+      display: block;
+    }
+
+    /* Garis bawah input animasi */
+    .input-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--teks);
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      margin-bottom: 0;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--aksen);
+      box-shadow: 0 0 0 3px rgba(123,63,0,0.12);
+      outline: none;
+    }
+
+    /* Label mengapung saat input diisi */
+    .input-wrap label {
+      position: absolute;
+      left: 14px;
+      top: 11px;
+      color: gray;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      pointer-events: none;
+      background: var(--bg);
+      padding: 0 4px;
+    }
+
+    .input-wrap input:focus ~ label,
+    .input-wrap input:not(:placeholder-shown) ~ label {
+      top: -9px;
+      font-size: 0.75rem;
+      color: var(--aksen);
+    }
+
+    /* Tombol login animasi */
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: var(--aksen);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .btn-login:hover {
+      background: var(--aksen2);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(123,63,0,0.3);
+    }
+
+    .btn-login:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 16px 0;
+      color: gray;
+      font-size: 0.85rem;
+    }
+    .divider::before, .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background partikel salib melayang -->
+  <div class="bg-animasi" id="bg-animasi"></div>
+
+  <div class="halaman-auth">
+    <div class="kartu-auth">
+
+      <!-- Logo -->
+      <span class="logo-auth">✝️</span>
+      <h2 style="text-align:center;color:var(--aksen);margin-bottom:4px">Bible Kita</h2>
+      <p style="text-align:center;color:gray;margin-bottom:24px;font-size:0.9rem">
+        Masuk ke akunmu
+      </p>
+
+      <!-- Form Login -->
+      <div class="input-wrap">
+        <input type="email" id="inp-email" placeholder=" ">
+        <label for="inp-email">📧 Email</label>
+      </div>
+
+      <div class="input-wrap">
+        <input type="password" id="inp-pass" placeholder=" ">
+        <label for="inp-pass">🔒 Password</label>
+      </div>
+
+      <!-- Tombol Login -->
+      <button class="btn-login" onclick="prosesLogin(event)">
+        Masuk
+      </button>
+
+      <!-- Pesan error/sukses -->
+      <p id="pesan-auth" style="text-align:center;font-size:0.88rem;min-height:20px"></p>
+
+      <div class="divider">atau</div>
+
+      <!-- Link ke register -->
+      <p style="text-align:center;font-size:0.9rem">
+        Belum punya akun?
+        <a href="register.html"
+          style="color:var(--aksen);font-weight:bold;text-decoration:none">
+          Daftar Sekarang
+        </a>
+      </p>
+
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    // ===== BUAT PARTIKEL SALIB MELAYANG =====
+    (function() {
+      const bg      = document.getElementById("bg-animasi");
+      const simbol  = ["✝", "✞", "☩", "🕊️", "⭐"];
+      const jumlah  = 18;
+
+      for (let i = 0; i < jumlah; i++) {
+        const el = document.createElement("span");
+        el.className   = "partikel";
+        el.textContent = simbol[Math.floor(Math.random() * simbol.length)];
+
+        // Posisi dan ukuran acak
+        el.style.left     = Math.random() * 100 + "vw";
+        el.style.fontSize = (0.8 + Math.random() * 1.5) + "rem";
+
+        // Durasi dan delay acak supaya tidak serempak
+        const durasi = 8 + Math.random() * 12;
+        const delay  = -Math.random() * durasi;
+        el.style.animationDuration = durasi + "s";
+        el.style.animationDelay   = delay + "s";
+
+        bg.appendChild(el);
+      }
+    })();
+
+    // Cek kalau sudah login → langsung ke index
+    window.addEventListener("DOMContentLoaded", function() {
+      const user = getUserLogin();
+      if (user) window.location.href = "index.html";
+    });
+  </script>
+</body>
+  </html>
