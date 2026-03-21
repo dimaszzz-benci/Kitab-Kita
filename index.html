@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible Kita</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ===== ANIMASI KHUSUS HALAMAN UTAMA ===== */
+
+    /* Splash screen saat pertama buka */
+    .splash {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--aksen);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .splash.hilang {
+      opacity: 0;
+      transform: scale(1.05);
+      pointer-events: none;
+    }
+
+    @keyframes splashLogo {
+      0%   { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+      60%  { transform: scale(1.1) rotate(3deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .splash-logo {
+      font-size: 4rem;
+      animation: splashLogo 0.8s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+
+    @keyframes splashTeks {
+      from { opacity: 0; transform: translateY(15px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .splash-teks {
+      color: white;
+      font-size: 1.6rem;
+      font-family: 'Georgia', serif;
+      letter-spacing: 2px;
+      margin-top: 12px;
+      animation: splashTeks 0.6s ease 0.4s forwards;
+      opacity: 0;
+    }
+
+    .splash-sub {
+      color: rgba(255,255,255,0.7);
+      font-size: 0.9rem;
+      margin-top: 6px;
+      animation: splashTeks 0.6s ease 0.7s forwards;
+      opacity: 0;
+    }
+
+    /* Loading bar di splash */
+    .splash-bar {
+      width: 160px;
+      height: 3px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      margin-top: 30px;
+      overflow: hidden;
+    }
+
+    .splash-bar-fill {
+      height: 100%;
+      background: white;
+      border-radius: 3px;
+      animation: loadBar 1.5s ease forwards;
+    }
+
+    @keyframes loadBar {
+      from { width: 0%; }
+      to   { width: 100%; }
+    }
+
+    /* ===== SWIPE NAVIGASI (geser kiri/kanan) ===== */
+    #konten-ayat {
+      touch-action: pan-y; /* izinkan swipe horizontal */
+    }
+
+    /* ===== BOTTOM NAV BAR ===== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 12px 0;
+      z-index: 150;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    }
+
+    .bottom-nav button {
+      background: none;
+      border: none;
+      color: var(--teks);
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 4px 10px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      opacity: 0.6;
+    }
+
+    .bottom-nav button span.ikon {
+      font-size: 1.4rem;
+    }
+
+    .bottom-nav button.aktif {
+      opacity: 1;
+      color: var(--aksen);
+    }
+
+    .bottom-nav button:active {
+      transform: scale(0.9);
+    }
+
+    /* Supaya konten tidak tertutup bottom nav */
+    body { padding-bottom: 70px; }
+
+    /* ===== PANEL BOOKMARK LIST ===== */
+    .panel-samping {
+      position: fixed;
+      top: 0; right: -100%;
+      width: min(320px, 90vw);
+      height: 100vh;
+      background: var(--kartu);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+      z-index: 400;
+      transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-samping.tampil { right: 0; }
+
+    .panel-samping-header {
+      background: var(--aksen);
+      color: white;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    .panel-samping-isi {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    .item-bookmark {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.88rem;
+    }
+
+    .item-bookmark:hover {
+      background: var(--bg);
+      border-color: var(--aksen);
+    }
+
+    /* Overlay gelap saat panel terbuka */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 350;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .overlay.tampil { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* ===== AYAT HARIAN (muncul di atas) ===== */
+    .ayat-harian {
+      background: linear-gradient(135deg, var(--aksen), var(--aksen2));
+      color: white;
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      text-align: center;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .ayat-harian:hover { opacity: 0.9; }
+
+    .ayat-harian strong {
+      display: block;
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-bottom: 3px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== SPLASH SCREEN ===== -->
+  <div class="splash" id="splash">
+    <div class="splash-logo">✝️</div>
+    <div class="splash-teks">Bible Kita</div>
+    <div class="splash-sub">Firman Tuhan untuk setiap hari</div>
+    <div class="splash-bar">
+      <div class="splash-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- ===== OVERLAY (untuk panel samping) ===== -->
+  <div class="overlay" id="overlay" onclick="tutupPanelSamping()"></div>
+
+  <!-- ===== HEADER ===== -->
+  <header>
+    <h1>✝ Bible Kita</h1>
+    <div style="display:flex;align-items:center;gap:4px">
+      <button class="btn-header" id="btn-mode" onclick="toggleMode()">🌙</button>
+      <button class="btn-header" onclick="bukaRomo()">🤖</button>
+      <button class="btn-header" onclick="bukaPanelBookmark()">🔖</button>
+      <span id="info-user"
+        style="font-size:0.8rem;color:rgba(255,255,255,0.85);margin-left:4px"></span>
+      <button class="btn-header" id="btn-logout"
+        style="display:none" onclick="logout()">Keluar</button>
+    </div>
+  </header>
+
+  <!-- ===== AYAT HARIAN ===== -->
+  <div class="ayat-harian" id="ayat-harian" onclick="pergiKeAyatHarian()">
+    <strong>✨ Ayat Hari Ini</strong>
+    <span id="teks-ayat-harian">Memuat...</span>
+  </div>
+
+  <!-- ===== NAVIGASI KITAB / PASAL / VERSI ===== -->
+  <div class="nav-bible">
+    <select id="pilih-kitab" onchange="gantiKitab()"></select>
+    <select id="pilih-pasal" onchange="gantiPasal()"></select>
+    <select id="pilih-versi" onchange="gantiVersi()"></select>
+  </div>
+
+  <!-- ===== PENCARIAN ===== -->
+  <div style="padding:10px 16px;background:var(--bg2);
+    border-bottom:1px solid var(--border);display:flex;gap:8px">
+    <input id="inp-cari" type="text" placeholder="🔍 Cari kata di pasal ini..."
+      style="flex:1;padding:8px 12px;border:1px solid var(--border);
+      border-radius:20px;background:var(--bg);color:var(--teks);font-size:0.9rem">
+    <button class="btn btn-primer" onclick="cariAyat()">Cari</button>
+  </div>
+
+  <!-- ===== AUDIO BAR ===== -->
+  <div class="audio-bar">
+    <button id="btn-play" onclick="mainkanAudio()">▶ Play</button>
+    <button onclick="stopAudio()">⏹</button>
+    <div class="audio-progress">
+      <div class="audio-progress-fill" id="audio-progress-fill"></div>
+    </div>
+    <span style="font-size:0.78rem">Speed:</span>
+    <input type="range" min="0.5" max="2" step="0.25" value="1"
+      oninput="ubahKecepatan(this.value)" style="width:70px">
+    <span id="label-speed" style="font-size:0.8rem">1x</span>
+  </div>
+
+  <!-- ===== KONTEN AYAT ===== -->
+  <div class="konten-ayat">
+    <h2 id="judul-pasal"
+      style="margin-bottom:16px;color:var(--aksen);text-align:center"></h2>
+
+    <!-- Navigasi atas -->
+    <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+      <button class="btn btn-primer" onclick="pasalSebelumnya()">◀ Sebelumnya</button>
+      <button class="btn btn-primer" onclick="pasalSelanjutnya()">Selanjutnya ▶</button>
+    </div>
+
+    <!-- Ayat dimuat di sini -->
+    <div id="konten-ayat"></div>
+
+    <!-- Navigasi bawah -->
+    <div style="display:flex;justify-content:space-between;
+      margin-top:20px;padding-bottom:10px">
+      <button class="btn btn-primer" onclick="pasalSebelumnya()">◀ Sebelumnya</button>
+      <button class="btn btn-primer" onclick="pasalSelanjutnya()">Selanjutnya ▶</button>
+    </div>
+  </div>
+
+  <!-- ===== MENU KLIK AYAT ===== -->
+  <div class="menu-ayat" id="menu-ayat">
+    <button onclick="toggleBookmark()">🔖 Bookmark</button>
+    <button onclick="bukaPanel('catatan')">📝 Catatan</button>
+    <button onclick="shareAyat()">📤 Share</button>
+    <hr style="margin:4px 0;border-color:var(--border)">
+    <div style="padding:4px 14px;font-size:0.78rem;color:gray">Highlight:</div>
+    <div style="display:flex;gap:6px;padding:6px 14px 10px">
+      <button onclick="highlightAyat('kuning')"
+        style="background:#fff9c4;width:26px;height:26px;
+        border-radius:50%;border:1px solid #ccc;cursor:pointer"></button>
+      <button onclick="highlightAyat('hijau')"
+        style="background:#c8e6c9;width:26px;height:26px;
+        border-radius:50%;border:1px solid #ccc;cursor:pointer"></button>
+      <button onclick="highlightAyat('biru')"
+        style="background:#bbdefb;width:26px;height:26px;
+        border-radius:50%;border:1px solid #ccc;cursor:pointer"></button>
+      <button onclick="highlightAyat('merah')"
+        style="background:#ffcdd2;width:26px;height:26px;
+        border-radius:50%;border:1px solid #ccc;cursor:pointer"></button>
+    </div>
+  </div>
+
+  <!-- ===== PANEL CATATAN ===== -->
+  <div class="panel-catatan" id="panel-catatan">
+    <div style="display:flex;justify-content:space-between;
+      align-items:center;margin-bottom:10px">
+      <strong id="catatan-judul">Catatan</strong>
+      <button onclick="tutupCatatan()"
+        style="background:none;border:none;font-size:1.3rem;cursor:pointer">✕</button>
+    </div>
+    <textarea id="catatan-input"
+      placeholder="Tulis catatanmu di sini..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-primer" onclick="simpanCatatan()">💾 Simpan</button>
+      <button class="btn" style="background:var(--border)"
+        onclick="tutupCatatan()">Batal</button>
+    </div>
+  </div>
+
+  <!-- ===== PANEL ROMO AI ===== -->
+  <div class="panel-romo" id="panel-romo">
+    <div class="romo-header">
+      <span>🤖 Romo AI — Asisten Alkitab</span>
+      <button onclick="tutupRomo()"
+        style="background:none;border:none;color:white;
+        font-size:1.3rem;cursor:pointer">✕</button>
+    </div>
+    <div class="romo-chat" id="romo-chat"></div>
+    <div class="romo-input-area">
+      <input id="romo-input" type="text"
+        placeholder="Tanya sesuatu tentang Alkitab...">
+      <button onclick="kirimKeRomo()">Kirim</button>
+    </div>
+  </div>
+
+  <!-- ===== PANEL BOOKMARK LIST ===== -->
+  <div class="panel-samping" id="panel-bookmark">
+    <div class="panel-samping-header">
+      <span>🔖 Bookmark Saya</span>
+      <button onclick="tutupPanelSamping()"
+        style="background:none;border:none;color:white;
+        font-size:1.3rem;cursor:pointer">✕</button>
+    </div>
+    <div class="panel-samping-isi" id="isi-bookmark">
+      <p style="color:gray;text-align:center;padding:20px">
+        Belum ada bookmark
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== BOTTOM NAVIGATION ===== -->
+  <nav class="bottom-nav">
+    <button class="aktif" onclick="scrollKeAtas()">
+      <span class="ikon">📖</span>
+      <span>Baca</span>
+    </button>
+    <button onclick="bukaPanelBookmark()">
+      <span class="ikon">🔖</span>
+      <span>Bookmark</span>
+    </button>
+    <button onclick="bukaRomo()">
+      <span class="ikon">🤖</span>
+      <span>Romo</span>
+    </button>
+    <button onclick="toggleMode()">
+      <span class="ikon" id="ikon-mode">🌙</span>
+      <span>Tema</span>
+    </button>
+  </nav>
+
+  <!-- Muat semua JS -->
+  <script src="auth.js"></script>
+  <script src="romo.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+    // ===== SPLASH SCREEN =====
+    window.addEventListener("load", function() {
+      setTimeout(function() {
+        const splash = document.getElementById("splash");
+        splash.classList.add("hilang");
+        setTimeout(() => splash.remove(), 500);
+      }, 2000); // splash tampil 2 detik
+    });
+
+    // ===== AYAT HARIAN =====
+    // Daftar ayat harian (bisa ditambah)
+    const AYAT_HARIAN = [
+      { ref:"Yohanes 3:16",   kitab:"JHN", pasal:3, ayat:16 },
+      { ref:"Filipi 4:13",    kitab:"PHP", pasal:4, ayat:13 },
+      { ref:"Roma 8:28",      kitab:"ROM", pasal:8, ayat:28 },
+      { ref:"Mazmur 23:1",    kitab:"PSA", pasal:23, ayat:1 },
+      { ref:"Yeremia 29:11",  kitab:"JER", pasal:29, ayat:11 },
+      { ref:"Amsal 3:5",      kitab:"PRO", pasal:3,  ayat:5  },
+      { ref:"Matius 6:33",    kitab:"MAT", pasal:6,  ayat:33 },
+      { ref:"Yesaya 40:31",   kitab:"ISA", pasal:40, ayat:31 },
+      { ref:"Mazmur 46:1",    kitab:"PSA", pasal:46, ayat:1  },
+      { ref:"2 Timotius 1:7", kitab:"2TI", pasal:1,  ayat:7  },
+    ];
+
+    // Pilih ayat harian berdasarkan hari ini
+    // (berganti setiap hari)
+    let ayatHarianAktif = null;
+
+    async function muatAyatHarian() {
+      const hari = new Date().getDate() % AYAT_HARIAN.length;
+      ayatHarianAktif = AYAT_HARIAN[hari];
+
+      try {
+        const url  = `https://bible-api.com/${ayatHarianAktif.kitab}+${ayatHarianAktif.pasal}:${ayatHarianAktif.ayat}?translation=id1`;
+        const res  = await fetch(url);
+        const data = await res.json();
+        const teks = data.verses?.[0]?.text || "Firman Tuhan adalah pelita bagi kakiku.";
+
+        document.getElementById("teks-ayat-harian").textContent =
+          `"${teks}" — ${ayatHarianAktif.ref}`;
+      } catch {
+        document.getElementById("teks-ayat-harian").textContent =
+          '"Karena begitu besar kasih Allah akan dunia ini..." — Yohanes 3:16';
+      }
+    }
+
+    // Klik ayat harian → pergi ke ayat tersebut
+    function pergiKeAyatHarian() {
+      if (!ayatHarianAktif) return;
+      state.kitabKode = ayatHarianAktif.kitab;
+      state.pasal     = ayatHarianAktif.pasal;
+
+      document.getElementById("pilih-kitab").value = ayatHarianAktif.kitab;
+      isiDropdownPasal();
+      document.getElementById("pilih-pasal").value = ayatHarianAktif.pasal;
+
+      muatAyat();
+      scrollKeAtas();
+
+      // Highlight ayat tujuan setelah dimuat
+      setTimeout(() => {
+        const el = document.getElementById("ayat-" + ayatHarianAktif.ayat);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.style.animation = "pulse 0.6s ease 3";
+        }
+      }, 1500);
+    }
+
+    // ===== PANEL BOOKMARK LIST =====
+    function bukaPanelBookmark() {
+      const panel = document.getElementById("panel-bookmark");
+      const overlay = document.getElementById("overlay");
+      const isi   = document.getElementById("isi-bookmark");
+
+      // Render daftar bookmark
+      const bm    = dataLokal.bookmarks;
+      const kunci = Object.keys(bm);
+
+      if (kunci.length === 0) {
+        isi.innerHTML = `
+          <p style="color:gray;text-align:center;padding:30px">
+            📭 Belum ada bookmark.<br>
+            <small>Klik ayat → 🔖 untuk bookmark</small>
+          </p>`;
+      } else {
+        isi.innerHTML = "";
+        kunci.forEach(k => {
+          const [kitabKode, pasal, ayat] = k.split("_");
+          const kitab = DAFTAR_KITAB.find(x => x.kode === kitabKode);
+          const nama  = kitab ? kitab.nama : kitabKode;
+
+          const div = document.createElement("div");
+          div.className = "item-bookmark";
+          div.innerHTML = `
+            <div style="font-weight:bold;color:var(--aksen)">
+              📖 ${nama} ${pasal}:${ayat}
+            </div>
+            <div style="font-size:0.8rem;color:gray;margin-top:2px">
+              Klik untuk pergi ke ayat ini
+            </div>
+          `;
+
+          div.addEventListener("click", function() {
+            state.kitabKode = kitabKode;
+            state.pasal     = parseInt(pasal);
+
+            document.getElementById("pilih-kitab").value = kitabKode;
+            isiDropdownPasal();
+            document.getElementById("pilih-pasal").value = pasal;
+
+            muatAyat();
+            tutupPanelSamping();
+
+            setTimeout(() => {
+              const el = document.getElementById("ayat-" + ayat);
+              if (el) el.scrollIntoView({ behavior:"smooth", block:"center" });
+            }, 1200);
+          });
+
+          isi.appendChild(div);
+        });
+      }
+
+      panel.classList.add("tampil");
+      overlay.classList.add("tampil");
+    }
+
+    function tutupPanelSamping() {
+      document.getElementById("panel-bookmark").classList.remove("tampil");
+      document.getElementById("overlay").classList.remove("tampil");
+    }
+
+    // ===== SCROLL KE ATAS =====
+    function scrollKeAtas() {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // ===== SWIPE KIRI/KANAN UNTUK GANTI PASAL =====
+    let touchStartX = 0;
+    let touchEndX   = 0;
+
+    document.addEventListener("touchstart", function(e) {
+      touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    document.addEventListener("touchend", function(e) {
+      touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX - touchEndX;
+
+      // Swipe kiri → pasal selanjutnya
+      if (diff > 60) pasalSelanjutnya();
+
+      // Swipe kanan → pasal sebelumnya
+      if (diff < -60) pasalSebelumnya();
+    }, { passive: true });
+
+    // ===== INIT =====
+    window.addEventListener("DOMContentLoaded", function() {
+      muatAyatHarian();
+
+      // Sync ikon mode di bottom nav
+      if (localStorage.getItem("bk_mode") === "gelap") {
+        document.getElementById("ikon-mode").textContent = "☀️";
+      }
+    });
+  </script>
+</body>
+  </html>
