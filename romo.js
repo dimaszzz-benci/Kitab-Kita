@@ -1,10 +1,10 @@
 // ===== romo.js =====
-// AI Romo — chatbot Alkitab pakai Claude AI
-// Daftar API key di: console.anthropic.com
+// AI Romo — pakai Google Gemini 2.0 Flash
+// Daftar API key GRATIS di: aistudio.google.com
 
-const ROMO_API_KEY = "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"; // ← ganti ini!
+const GEMINI_API_KEY = "AIzaSyDZC2eghCV9roYwzhbDsGR9SFFQGk6F5wM"; // ← ganti ini!
 
-// Riwayat percakapan supaya Romo ingat konteks
+// Riwayat percakapan
 let riwayatRomo = [];
 
 // Kepribadian Romo
@@ -20,74 +20,58 @@ function bukaRomo() {
   const panel = document.getElementById("panel-romo");
   panel.classList.add("tampil");
 
-  // Animasi panel naik dari bawah
   panel.style.transform  = "translateY(100%)";
   panel.style.transition = "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
   setTimeout(() => panel.style.transform = "translateY(0)", 10);
 
-  // Salam pertama kalau baru dibuka
+  // Salam pertama
   if (riwayatRomo.length === 0) {
-    setTimeout(() => {
-      tampilPesanBot("Halo! Saya Romo 🙏");
-    }, 300);
-    setTimeout(() => {
-      tampilPesanBot("Tanya apa saja tentang Alkitab, saya siap membantu! ✝️");
-    }, 900);
+    setTimeout(() => tampilPesanBot("Halo! Saya Romo 🙏"), 300);
+    setTimeout(() => tampilPesanBot("Tanya apa saja tentang Alkitab, saya siap membantu! ✝️"), 900);
   }
 
-  // Fokus ke input otomatis
-  setTimeout(() => document.getElementById("romo-input").focus(), 500);
+  setTimeout(() => {
+    const input = document.getElementById("romo-input");
+    if (input) input.focus();
+  }, 500);
 }
 
 // ===== TUTUP PANEL ROMO =====
 function tutupRomo() {
   const panel = document.getElementById("panel-romo");
-
-  // Animasi turun sebelum disembunyikan
   panel.style.transform = "translateY(100%)";
   setTimeout(() => panel.classList.remove("tampil"), 400);
 }
 
 // ===== TAMPIL PESAN BOT =====
-function tampilPesanBot(teks, animate = true) {
+function tampilPesanBot(teks) {
   const chat = document.getElementById("romo-chat");
   const div  = document.createElement("div");
-  div.className = "pesan-bot";
-
-  if (animate) {
-    // Animasi muncul dari kiri
-    div.style.opacity   = "0";
-    div.style.transform = "translateX(-15px)";
-    div.style.transition = "all 0.3s ease";
-  }
-
-  div.textContent = teks;
+  div.className        = "pesan-bot";
+  div.style.opacity    = "0";
+  div.style.transform  = "translateX(-15px)";
+  div.style.transition = "all 0.3s ease";
+  div.textContent      = teks;
   chat.appendChild(div);
 
-  if (animate) {
-    setTimeout(() => {
-      div.style.opacity   = "1";
-      div.style.transform = "translateX(0)";
-    }, 50);
-  }
+  setTimeout(() => {
+    div.style.opacity   = "1";
+    div.style.transform = "translateX(0)";
+  }, 50);
 
-  // Scroll ke bawah otomatis
   setTimeout(() => chat.scrollTop = chat.scrollHeight, 100);
-  return div; // kembalikan elemen supaya bisa diupdate (untuk typing effect)
+  return div;
 }
 
 // ===== TAMPIL PESAN USER =====
 function tampilPesanUser(teks) {
   const chat = document.getElementById("romo-chat");
   const div  = document.createElement("div");
-  div.className = "pesan-user";
-
-  // Animasi muncul dari kanan
+  div.className        = "pesan-user";
   div.style.opacity    = "0";
   div.style.transform  = "translateX(15px)";
   div.style.transition = "all 0.3s ease";
   div.textContent      = teks;
-
   chat.appendChild(div);
 
   setTimeout(() => {
@@ -98,110 +82,113 @@ function tampilPesanUser(teks) {
   setTimeout(() => chat.scrollTop = chat.scrollHeight, 100);
 }
 
-// ===== ANIMASI TYPING (titik-titik bergerak) =====
+// ===== ANIMASI TYPING =====
 function tampilTyping() {
-  const chat = document.getElementById("romo-chat");
-  const div  = document.createElement("div");
-  div.className  = "pesan-bot typing-indicator";
-  div.id         = "typing-indicator";
-  div.innerHTML  = `
-    <span style="display:inline-flex;gap:4px;align-items:center">
-      <span class="titik" style="width:7px;height:7px;background:var(--aksen);border-radius:50%;animation:titikNaik 0.8s infinite 0s"></span>
-      <span class="titik" style="width:7px;height:7px;background:var(--aksen);border-radius:50%;animation:titikNaik 0.8s infinite 0.2s"></span>
-      <span class="titik" style="width:7px;height:7px;background:var(--aksen);border-radius:50%;animation:titikNaik 0.8s infinite 0.4s"></span>
-    </span>
-  `;
-
-  // Tambahkan animasi titik ke halaman kalau belum ada
+  // Inject style animasi titik kalau belum ada
   if (!document.getElementById("style-typing")) {
-    const style = document.createElement("style");
-    style.id = "style-typing";
+    const style    = document.createElement("style");
+    style.id       = "style-typing";
     style.textContent = `
       @keyframes titikNaik {
         0%, 100% { transform: translateY(0); opacity: 0.4; }
         50%       { transform: translateY(-5px); opacity: 1; }
       }
-      @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        20%       { transform: translateX(-8px); }
-        40%       { transform: translateX(8px); }
-        60%       { transform: translateX(-5px); }
-        80%       { transform: translateX(5px); }
-      }
     `;
     document.head.appendChild(style);
   }
 
+  const chat       = document.getElementById("romo-chat");
+  const div        = document.createElement("div");
+  div.className    = "pesan-bot typing-indicator";
+  div.id           = "typing-indicator";
+  div.innerHTML    = `
+    <span style="display:inline-flex;gap:4px;align-items:center;padding:4px 0">
+      <span style="width:7px;height:7px;background:var(--aksen);border-radius:50%;
+        animation:titikNaik 0.8s infinite 0s;display:inline-block"></span>
+      <span style="width:7px;height:7px;background:var(--aksen);border-radius:50%;
+        animation:titikNaik 0.8s infinite 0.2s;display:inline-block"></span>
+      <span style="width:7px;height:7px;background:var(--aksen);border-radius:50%;
+        animation:titikNaik 0.8s infinite 0.4s;display:inline-block"></span>
+    </span>
+  `;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
 
-// Hapus animasi typing
 function hapusTyping() {
   const el = document.getElementById("typing-indicator");
   if (el) el.remove();
 }
 
-// ===== KIRIM PERTANYAAN KE ROMO =====
+// ===== KIRIM KE GEMINI =====
 async function kirimKeRomo() {
-  const input      = document.getElementById("romo-input");
-  const btnKirim   = document.querySelector(".romo-input-area button");
+  const input    = document.getElementById("romo-input");
+  const btnKirim = document.querySelector(".romo-input-area button");
   const pertanyaan = input.value.trim();
   if (!pertanyaan) return;
 
-  input.value = "";
-  input.disabled    = true;  // nonaktifkan input saat loading
-  btnKirim.disabled = true;
-  btnKirim.textContent = "...";
+  input.value           = "";
+  input.disabled        = true;
+  btnKirim.disabled     = true;
+  btnKirim.textContent  = "...";
 
   tampilPesanUser(pertanyaan);
 
   // Tambah ke riwayat
-  riwayatRomo.push({ role: "user", content: pertanyaan });
+  riwayatRomo.push({
+    role: "user",
+    parts: [{ text: pertanyaan }]
+  });
 
-  // Tampilkan animasi typing
   setTimeout(() => tampilTyping(), 300);
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    // URL Gemini 2.0 Flash API
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    const res = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ROMO_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model      : "claude-sonnet-4-20250514",
-        max_tokens : 600,
-        system     : SYSTEM_ROMO,
-        messages   : riwayatRomo
+        // System instruction = kepribadian Romo
+        system_instruction: {
+          parts: [{ text: SYSTEM_ROMO }]
+        },
+        // Kirim seluruh riwayat supaya Romo ingat konteks
+        contents: riwayatRomo
       })
     });
 
-    const data    = await res.json();
-    const balasan = data.content?.[0]?.text || "Maaf, saya tidak bisa menjawab saat ini. 🙏";
+    const data = await res.json();
 
-    // Hapus typing → tampilkan jawaban
     hapusTyping();
+
+    // Ambil teks balasan dari Gemini
+    const balasan = data?.candidates?.[0]?.content?.parts?.[0]?.text
+      || "Maaf, saya tidak bisa menjawab saat ini. 🙏";
+
     tampilPesanBot(balasan);
 
     // Simpan balasan ke riwayat
-    riwayatRomo.push({ role: "assistant", content: balasan });
+    riwayatRomo.push({
+      role: "model",
+      parts: [{ text: balasan }]
+    });
 
   } catch (err) {
     hapusTyping();
     tampilPesanBot("❌ Maaf, terjadi kesalahan. Periksa koneksi internet kamu.");
+    console.error(err);
   }
 
   // Aktifkan kembali input
-  input.disabled    = false;
-  btnKirim.disabled = false;
+  input.disabled       = false;
+  btnKirim.disabled    = false;
   btnKirim.textContent = "Kirim";
   input.focus();
 }
 
-// ===== TEKAN ENTER UNTUK KIRIM =====
+// ===== ENTER UNTUK KIRIM =====
 document.addEventListener("DOMContentLoaded", function() {
   const input = document.getElementById("romo-input");
   if (input) {
