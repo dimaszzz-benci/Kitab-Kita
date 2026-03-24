@@ -1,3 +1,4 @@
+// ===== app.js =====
 
 // ===== INJECT ANIMASI =====
 (function() {
@@ -593,7 +594,4 @@ function gantiKitab() {
 function gantiPasal() {
   state.pasal = parseInt(document.getElementById("pilih-pasal").value);
   muatAyat();
-  stopAudio();
-}
-
-funct
+ 
